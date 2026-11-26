@@ -1,0 +1,289 @@
+{
+  "id": "aiLeadQualifier01",
+  "name": "AI Lead Qualifier (demo)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "lead",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "1871e15e-5abc-4896-8a2f-1693717ac9a1",
+      "name": "Lead webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        300
+      ],
+      "webhookId": "c38e62a9-4f56-46a8-a286-cadb8f65e405"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Normalize and validate the incoming lead, then build the AI request.\nconst body = $json.body ?? $json;\nconst clean = (v) => String(v ?? '').trim();\n\nconst lead = {\n  received_at: new Date().toISOString(),\n  name: clean(body.name),\n  email: clean(body.email).toLowerCase(),\n  company: clean(body.company),\n  website: clean(body.website),\n  budget: clean(body.budget),\n  message: clean(body.message).slice(0, 2000),\n};\n\nif (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(lead.email)) {\n  throw new Error('Invalid email address');\n}\n\nconst prompt = `You qualify inbound leads for a software agency that builds mobile apps, APIs and automations.\nScore the lead from 0 to 100 (budget fit, clarity of need, urgency, company legitimacy).\nReturn ONLY a JSON object with keys:\n\"score\" (number), \"category\" (\"hot\" | \"warm\" | \"cold\" | \"spam\"),\n\"summary\" (one sentence), \"suggested_reply\" (2-3 friendly sentences in the lead's language).\n\nLead:\nName: ${lead.name}\nCompany: ${lead.company}\nWebsite: ${lead.website}\nBudget: ${lead.budget}\nMessage: ${lead.message}`;\n\nlead.aiRequest = {\n  model: 'claude-haiku-5-5',\n  max_tokens: 400,\n  messages: [{ role: 'user', content: prompt }],\n};\n\nreturn { json: lead };\n"
+      },
+      "id": "34a8ccf4-8d84-44e9-8f05-76a6ccc4014f",
+      "name": "Normalize lead",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.aiRequest) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "3546271d-f405-4428-82ca-0c84e70ff96b",
+      "name": "AI: score lead",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        440,
+        300
+      ],
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Merge the AI verdict with the lead. Falls back to \"review\" if the AI call failed.\nconst lead = { ...$('Normalize lead').item.json };\ndelete lead.aiRequest;\n\nlet ai = {\n  score: 0,\n  category: 'review',\n  summary: 'AI response unavailable - review manually',\n  suggested_reply: '',\n};\n\ntry {\n  const text = $json.content?.[0]?.text ?? '';\n  const match = text.match(/\\{[\\s\\S]*\\}/);\n  if (match) ai = { ...ai, ...JSON.parse(match[0]) };\n} catch (error) {\n  // keep fallback\n}\n\nconst score = Math.max(0, Math.min(100, Number(ai.score) || 0));\n\nreturn {\n  json: {\n    ...lead,\n    score,\n    category: ai.category,\n    summary: ai.summary,\n    suggested_reply: ai.suggested_reply,\n  },\n};\n"
+      },
+      "id": "69567a32-b457-4825-8665-dca613929180",
+      "name": "Parse AI result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "url",
+          "value": "https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/edit"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Leads"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "3a52cf04-209d-4bb6-984e-c25ad19fba1c",
+      "name": "Add to CRM sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        880,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "69b0a415-02a9-4174-9c13-3eac927e4c3f",
+              "leftValue": "={{ $('Parse AI result').item.json.score }}",
+              "rightValue": 70,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "f7ee76fc-21fb-4c65-a050-3887bd9a6c8e",
+      "name": "Hot lead?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1100,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ text: `:fire: *Hot lead* (${$('Parse AI result').item.json.score}/100) - ${$('Parse AI result').item.json.name} from ${$('Parse AI result').item.json.company}\\n${$('Parse AI result').item.json.summary}\\nEmail: ${$('Parse AI result').item.json.email}` }) }}",
+        "options": {}
+      },
+      "id": "0837c097-48c3-4ff7-813c-ae813f49dff4",
+      "name": "Slack alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1320,
+        200
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: true, category: $('Parse AI result').item.json.category, message: 'Thanks! We will get back to you shortly.' }) }}",
+        "options": {}
+      },
+      "id": "102bb123-e868-401e-bca1-6c6261f2678c",
+      "name": "Respond to form",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1540,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## AI Lead Qualifier\nWebsite form -> AI scores the lead (0-100) -> row in Google Sheets (CRM) -> Slack alert for hot leads -> JSON answer to the form.\n\n**Setup:** Header Auth credential (`x-api-key`) on *AI: score lead*, Google Sheets credential + sheet URL, Slack incoming webhook URL.",
+        "height": 220,
+        "width": 420
+      },
+      "id": "5d1f8e3a-2c4b-4e6f-9a7b-1c2d3e4f5a6b",
+      "name": "About this workflow",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        -20
+      ]
+    }
+  ],
+  "connections": {
+    "Lead webhook": {
+      "main": [
+        [
+          {
+            "node": "Normalize lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize lead": {
+      "main": [
+        [
+          {
+            "node": "AI: score lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI: score lead": {
+      "main": [
+        [
+          {
+            "node": "Parse AI result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse AI result": {
+      "main": [
+        [
+          {
+            "node": "Add to CRM sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add to CRM sheet": {
+      "main": [
+        [
+          {
+            "node": "Hot lead?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hot lead?": {
+      "main": [
+        [
+          {
+            "node": "Slack alert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to form",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slack alert": {
+      "main": [
+        [
+          {
+            "node": "Respond to form",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {},
+  "active": false
+}

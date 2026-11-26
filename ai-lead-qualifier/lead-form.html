@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Contact us — AI Lead Qualifier demo</title>
+  <style>
+    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background:#f3f4f6; color:#111827; margin:0; }
+    main { max-width: 520px; margin: 48px auto; background:#fff; padding: 32px; border-radius: 14px; box-shadow: 0 4px 20px rgba(0,0,0,.06); }
+    h1 { margin-top: 0; font-size: 1.6rem; }
+    label { display:block; font-weight: 600; margin: 14px 0 4px; }
+    input, textarea, select { width:100%; box-sizing:border-box; padding: 10px; border:1px solid #6b7280; border-radius: 8px; font: inherit; }
+    textarea { min-height: 110px; }
+    button { margin-top: 20px; width:100%; padding: 12px; border:0; border-radius: 8px; background:#1d4ed8; color:#fff; font-weight: 700; font-size: 1rem; cursor:pointer; }
+    button:disabled { background:#6b7280; }
+    :focus-visible { outline: 3px solid #f59e0b; outline-offset: 2px; }
+    #status { margin-top: 16px; font-weight: 600; }
+    .hint { font-size: .85rem; color:#4b5563; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Tell us about your project</h1>
+  <p class="hint">Demo form. Submissions go to an n8n workflow that scores the lead with AI, logs it to Google Sheets and alerts the team on Slack.</p>
+
+  <form id="lead-form">
+    <label for="name">Name</label>
+    <input id="name" name="name" autocomplete="name" required>
+
+    <label for="email">Work email</label>
+    <input id="email" name="email" type="email" autocomplete="email" required>
+
+    <label for="company">Company</label>
+    <input id="company" name="company" autocomplete="organization">
+
+    <label for="website">Website</label>
+    <input id="website" name="website" type="url" placeholder="https://">
+
+    <label for="budget">Budget</label>
+    <select id="budget" name="budget">
+      <option>Under $1k</option>
+      <option>$1k – $5k</option>
+      <option>$5k – $20k</option>
+      <option>$20k+</option>
+    </select>
+
+    <label for="message">What do you need?</label>
+    <textarea id="message" name="message" required></textarea>
+
+    <button type="submit">Send</button>
+    <p id="status" role="status" aria-live="polite"></p>
+  </form>
+</main>
+
+<script>
+  // Set this to your n8n production webhook URL.
+  const WEBHOOK_URL = 'http://localhost:5678/webhook/lead';
+
+  const form = document.getElementById('lead-form');
+  const status = document.getElementById('status');
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const button = form.querySelector('button');
+    button.disabled = true;
+    status.textContent = 'Sending…';
+    try {
+      const response = await fetch(WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(Object.fromEntries(new FormData(form))),
+      });
+      if (!response.ok) throw new Error('HTTP ' + response.status);
+      const data = await response.json();
+      status.textContent = data.message || 'Thanks! We will be in touch.';
+      form.reset();
+    } catch (error) {
+      status.textContent = 'Sorry, something went wrong. Please try again.';
+    } finally {
+      button.disabled = false;
+    }
+  });
+</script>
+</body>
+</html>

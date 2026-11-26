@@ -6,8 +6,10 @@ Sample projects that show how I build software for clients: native mobile apps, 
 |---|---|---|
 | [fxrates-ios](fxrates-ios) | Swift, SwiftUI, Swift Charts | Native iOS app consuming a REST API, MVVM, charts, VoiceOver |
 | [fxrates-android](fxrates-android) | Kotlin, Jetpack Compose, Coroutines | The same app built natively for Android, Material 3, TalkBack |
+| [a11y-audit](a11y-audit) | Node.js, Playwright, axe-core | WCAG 2.2 AA scanner with PDF client reports; demo store fixed from 28 to 100 |
+| [ai-lead-qualifier](ai-lead-qualifier) | n8n, Claude API, Google Sheets, Slack | AI lead scoring automation with CRM logging and hot-lead alerts |
 
-Both apps consume the public [Frankfurter API](https://frankfurter.dev) and share the same feature set, so you can compare native implementations side by side.
+The two mobile apps consume the public [Frankfurter API](https://frankfurter.dev) and share the same feature set, so you can compare native implementations side by side.
 
 ## Services
 

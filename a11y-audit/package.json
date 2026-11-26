@@ -1,0 +1,14 @@
+{
+  "name": "a11y-audit",
+  "version": "1.0.0",
+  "description": "WCAG 2.2 AA accessibility scanner (Playwright + axe-core) that generates HTML/PDF client reports",
+  "type": "module",
+  "scripts": {
+    "scan": "node scan.mjs",
+    "demo": "node scan.mjs ./demo-site/before/index.html --out reports/demo-before --client \"Nordic Brew (demo) — before\" --manual ./demo-site/before/manual-findings.json && node scan.mjs ./demo-site/after/index.html --out reports/demo-after --client \"Nordic Brew (demo) — after\""
+  },
+  "dependencies": {
+    "@axe-core/playwright": "^4.10.0",
+    "playwright": "^1.48.0"
+  }
+}

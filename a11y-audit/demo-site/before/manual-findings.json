@@ -1,0 +1,44 @@
+[
+  {
+    "title": "Subscribe control is not keyboard accessible",
+    "impact": "critical",
+    "wcag": "2.1.1 Keyboard (Level A), 4.1.2 Name, Role, Value (Level A)",
+    "description": "The newsletter 'Subscribe' control is a <div> with an onclick handler. It cannot be reached with Tab or activated with Enter/Space, and screen readers do not announce it as a button.",
+    "fix": "Use a native <button type=\"submit\"> inside a <form>."
+  },
+  {
+    "title": "Keyboard focus is invisible",
+    "impact": "serious",
+    "wcag": "2.4.7 Focus Visible (Level AA)",
+    "description": "The stylesheet removes the outline from every focused element (*:focus { outline: none }). Keyboard users cannot see where they are on the page.",
+    "fix": "Remove the global rule and add a visible :focus-visible style (e.g. 3px solid outline with offset)."
+  },
+  {
+    "title": "Form fields rely on placeholder text instead of labels",
+    "impact": "serious",
+    "wcag": "1.3.1 Info and Relationships (Level A), 3.3.2 Labels or Instructions (Level A)",
+    "description": "The search and email fields have no <label>. The placeholder disappears while typing and is not reliably announced by all assistive technologies.",
+    "fix": "Add a <label for> for each field (visually hidden for the search field if needed) and autocomplete=\"email\" on the email field."
+  },
+  {
+    "title": "Missing page structure: no landmarks, no H1, skipped heading levels",
+    "impact": "moderate",
+    "wcag": "1.3.1 Info and Relationships (Level A), 2.4.1 Bypass Blocks (Level A), 2.4.6 Headings and Labels (Level AA)",
+    "description": "The page has no <header>, <nav> or <main> landmarks and no skip link. The main headline is a styled <div>, and headings jump from H4 to H5.",
+    "fix": "Add header/nav/main landmarks, a 'Skip to main content' link, a single H1, and sequential H2/H3 headings."
+  },
+  {
+    "title": "Ambiguous link and button text",
+    "impact": "moderate",
+    "wcag": "2.4.4 Link Purpose (Level A), 2.5.8 Target Size (Level AA)",
+    "description": "Links read 'here' and buttons read '+', which give no context out of context. The '+' buttons are also smaller than the 24×24 px minimum target size.",
+    "fix": "Use descriptive text ('Read our privacy policy', 'Add to cart — Brazil Cerrado') and make targets at least 24×24 px (44×44 recommended)."
+  },
+  {
+    "title": "Generic page title",
+    "impact": "minor",
+    "wcag": "2.4.2 Page Titled (Level A)",
+    "description": "The page title is just 'Shop', which does not identify the site or page in browser tabs and screen reader announcements.",
+    "fix": "Use a descriptive title such as 'Nordic Brew — Specialty Coffee Shop'."
+  }
+]

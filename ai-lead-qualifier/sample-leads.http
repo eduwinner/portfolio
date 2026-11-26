@@ -1,0 +1,25 @@
+### Hot lead — clear scope, budget, real company
+POST http://localhost:5678/webhook/lead
+Content-Type: application/json
+
+{
+  "name": "Anna Larsen",
+  "email": "anna@larsen-logistics.dk",
+  "company": "Larsen Logistics",
+  "website": "https://larsen-logistics.dk",
+  "budget": "$5k – $20k",
+  "message": "We need an iOS and Android app for our drivers to scan deliveries and sync with our REST API. Launch target is March."
+}
+
+### Cold lead — vague, no budget
+POST http://localhost:5678/webhook/lead
+Content-Type: application/json
+
+{
+  "name": "Mike",
+  "email": "mike123@gmail.com",
+  "company": "",
+  "website": "",
+  "budget": "Under $1k",
+  "message": "app like uber cheap"
+}
