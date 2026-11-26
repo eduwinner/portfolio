@@ -1,0 +1,46 @@
+name: FXRates
+options:
+  bundleIdPrefix: com.winnertecnologia
+  deploymentTarget:
+    iOS: "16.0"
+  createIntermediateGroups: true
+
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    MARKETING_VERSION: "1.0"
+    CURRENT_PROJECT_VERSION: "1"
+
+targets:
+  FXRates:
+    type: application
+    platform: iOS
+    sources: [FXRates]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.winnertecnologia.fxrates
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: FX Rates
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: UIInterfaceOrientationPortrait
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+        TARGETED_DEVICE_FAMILY: "1,2"
+
+  FXRatesTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources: [FXRatesTests]
+    dependencies:
+      - target: FXRates
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.winnertecnologia.fxrates.tests
+        GENERATE_INFOPLIST_FILE: YES
+
+schemes:
+  FXRates:
+    build:
+      targets:
+        FXRates: all
+    test:
+      targets: [FXRatesTests]

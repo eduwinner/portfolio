@@ -1,0 +1,24 @@
+# macOS / Windows
+.DS_Store
+Thumbs.db
+
+# Xcode
+*.xcodeproj/
+*.xcworkspace/
+xcuserdata/
+DerivedData/
+build/
+
+# Android / Gradle
+.gradle/
+local.properties
+*.iml
+.idea/
+captures/
+.externalNativeBuild/
+.cxx/
+app/build/
+**/build/
+
+# IDE
+.vscode/
